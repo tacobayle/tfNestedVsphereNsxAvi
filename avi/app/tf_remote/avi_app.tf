@@ -2,7 +2,7 @@ resource "vsphere_folder" "apps" {
   count            = 1
   path          = "avi-apps"
   type          = "vm"
-  datacenter_id = data.vsphere_datacenter.dc_nested[0].id
+  datacenter_id = data.vsphere_datacenter.dc_nested.id
 }
 
 

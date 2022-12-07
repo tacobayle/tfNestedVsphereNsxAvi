@@ -124,7 +124,7 @@ if [[ $(jq -c -r '.nsx.config.segments_overlay | length' $jsonFile) -gt 0 ]] ; t
         do
           if [[ $(echo $tier1 | jq -c -r .tier0) == $(echo $tier0 | jq -c -r .display_name) ]] ; then
             new_routes=$(echo $new_routes | jq '. += [{"to": "'$(echo $segment | jq -c -r .cidr)'", "via": "'$(jq -c -r .vcenter.vds.portgroup.nsx_external.tier0_vips["$count"] $jsonFile)'"}]')
-            echo "   +++ Route to $(echo $segment | jq -c -r .cidr) via $(jq -c -r .vcenter.vds.portgroup.nsx_external.tier0_vips["$count"] $jsonFile) added: OK"
+            echo "   ++++++ Route to $(echo $segment | jq -c -r .cidr) via $(jq -c -r .vcenter.vds.portgroup.nsx_external.tier0_vips["$count"] $jsonFile) added: OK"
           fi
           ((count++))
         done
@@ -147,7 +147,7 @@ if [[ $(jq -c -r '.avi.config.cloud.networks_data | length' $jsonFile) -gt 0 ]] 
             do
               if [[ $(echo $tier1 | jq -c -r .tier0) == $(echo $tier0 | jq -c -r .display_name) ]] ; then
                 new_routes=$(echo $new_routes | jq '. += [{"to": "'$(echo $segment | jq -c -r .cidr)'", "via": "'$(jq -c -r .vcenter.vds.portgroup.nsx_external.tier0_vips["$count"] $jsonFile)'"}]')
-                echo "   +++ Route to $(echo $segment | jq -c -r .cidr) via $(jq -c -r .vcenter.vds.portgroup.nsx_external.tier0_vips["$count"] $jsonFile) added: OK"
+                echo "   ++++++ Route to $(echo $network | jq -c -r .avi_ipam_vip.cidr) via $(jq -c -r .vcenter.vds.portgroup.nsx_external.tier0_vips["$count"] $jsonFile) added: OK"
               fi
               ((count++))
             done
@@ -236,7 +236,6 @@ do
   fi
 done
 echo "   ++++++ Amount of external vip is $(jq -c -r '.vcenter.vds.portgroup.nsx_external.tier0_vips | length' $jsonFile), amount of vip needed: $tier0_vips, OK"
-echo ""
 #
 test_if_ref_from_list_exists_in_another_list ".nsx.config.tier1s[].tier0" \
                                              ".nsx.config.tier0s[].display_name" \

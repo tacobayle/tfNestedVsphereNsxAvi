@@ -318,6 +318,25 @@ avi_json=$(echo $avi_json | jq '.avi.config.cloud += {"networks_data": '$(echo $
 #
 echo $avi_json | jq . | tee avi.json > /dev/null
 #
+# checking if seg ref in DNS VS exist in seg list
+if [ $(jq -c -r '.avi.config.virtual_services.dns | length' $jsonFile) -gt 0 ] ; then
+  test_if_ref_from_list_exists_in_another_list ".avi.config.virtual_services.dns[].se_group_ref" \
+                                               ".avi.config.service_engine_groups[].name" \
+                                               "$jsonFile" \
+                                               "   +++ Checking Service Engine Group in DNS VS" \
+                                               "   ++++++ Service Engine Group " \
+                                               "   ++++++ERROR++++++ segment not found: "
+fi
+# checking if seg ref in HTTP VS exist in seg list
+if [ $(jq -c -r '.avi.config.virtual_services.http | length' $jsonFile) -gt 0 ] ; then
+  test_if_ref_from_list_exists_in_another_list ".avi.config.virtual_services.http[].se_group_ref" \
+                                               ".avi.config.service_engine_groups[].name" \
+                                               "$jsonFile" \
+                                               "   +++ Checking Service Engine Group in HTTP VS" \
+                                               "   ++++++ Service Engine Group " \
+                                               "   ++++++ERROR++++++ segment not found: "
+fi
+#
 # check of the app parameters
 #
 rm -f app.json

@@ -529,6 +529,7 @@
             "name": "app1-hello-world-nsxt",
             "network_ref": "my-segment-vip-1",
             "pool_ref": "pool1-hello-nsxt",
+            "se_group_ref": "Default-Group",
             "services": [
               {
                 "port": 80,
@@ -544,6 +545,7 @@
             "name": "app2-avi-nsxt",
             "network_ref": "my-segment-vip-1",
             "pool_ref": "pool2-avi-nsxt",
+            "se_group_ref": "Default-Group",
             "services": [
               {
                 "port": 80,
@@ -559,6 +561,7 @@
             "name": "app3-waf",
             "network_ref": "my-segment-vip-1",
             "pool_ref": "pool3-waf",
+            "se_group_ref": "Default-Group",
             "services": [
               {
                 "port": 80,
@@ -590,6 +593,7 @@
             "name": "app5-hello-world-nsxt-group",
             "network_ref": "my-segment-vip-1",
             "pool_ref": "avi-app-nsx-group",
+            "se_group_ref": "Default-Group",
             "services": [
               {
                 "port": 80,
@@ -606,6 +610,7 @@
           {
             "name": "app6-dns",
             "network_ref": "my-segment-vip-2",
+            "se_group_ref": "Default-Group",
             "services": [
               {
                 "port": 53

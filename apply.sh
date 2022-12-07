@@ -146,7 +146,7 @@ if [[ $(jq -c -r '.avi.config.cloud.networks_data | length' $jsonFile) -gt 0 ]] 
             for tier0 in $(jq -c -r .nsx.config.tier0s[] $jsonFile)
             do
               if [[ $(echo $tier1 | jq -c -r .tier0) == $(echo $tier0 | jq -c -r .display_name) ]] ; then
-                new_routes=$(echo $new_routes | jq '. += [{"to": "'$(echo $segment | jq -c -r .cidr)'", "via": "'$(jq -c -r .vcenter.vds.portgroup.nsx_external.tier0_vips["$count"] $jsonFile)'"}]')
+                new_routes=$(echo $new_routes | jq '. += [{"to": "'$(echo $network | jq -c -r .avi_ipam_vip.cidr)'", "via": "'$(jq -c -r .vcenter.vds.portgroup.nsx_external.tier0_vips["$count"] $jsonFile)'"}]')
                 echo "   ++++++ Route to $(echo $network | jq -c -r .avi_ipam_vip.cidr) via $(jq -c -r .vcenter.vds.portgroup.nsx_external.tier0_vips["$count"] $jsonFile) added: OK"
               fi
               ((count++))

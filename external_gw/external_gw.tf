@@ -153,7 +153,7 @@ resource "null_resource" "add_nic_to_gw_network_nsx_overlay_edge" {
   }
 }
 
-resource "null_resource" "update_ip_external_gw_1" {
+resource "null_resource" "adding_ip_to_nsx_external" {
   depends_on = [null_resource.add_nic_to_gw_network_nsx_external, null_resource.add_nic_to_gw_network_nsx_overlay, null_resource.add_nic_to_gw_network_nsx_overlay_edge]
   count = 1
 
@@ -192,13 +192,25 @@ resource "null_resource" "update_ip_external_gw_1" {
   }
 }
 
+resource "null_resource" "set_initial_state" {
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
+    command = "echo \"0\" > current_state.txt"
+  }
+}
 
 
 
 
-resource "null_resource" "update_ip_external_gw_2" {
-  depends_on = [null_resource.update_ip_external_gw_1]
+resource "null_resource" "update_ip_routes" {
+  depends_on = [null_resource.adding_ip_to_nsx_external, null_resource.set_initial_state]
   count = length(var.external_gw.routes)
+
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
+    command = "while [[ $(cat current_state.txt) != \"${count.index}\" ]]; do echo \"${count.index} is waiting...\";sleep 5;done"
+  }
+
 
   connection {
     host        = var.vcenter.vds.portgroup.management.external_gw_ip
@@ -214,12 +226,18 @@ resource "null_resource" "update_ip_external_gw_2" {
       "echo \"              via: ${var.external_gw.routes[count.index].via}\" | sudo tee -a ${var.external_gw.netplanFile}"
     ]
   }
+
+  provisioner "local-exec" {
+    interpreter = ["bash", "-c"]
+    command = "echo \"${count.index+1}\" > current_state.txt"
+  }
+
 }
 
 
 
-resource "null_resource" "update_ip_external_gw_3" {
-  depends_on = [null_resource.update_ip_external_gw_2]
+resource "null_resource" "adding_ip_to_nsx_overlay_and_nsx_overlay_edge" {
+  depends_on = [null_resource.update_ip_routes]
   count = 1
 
   connection {

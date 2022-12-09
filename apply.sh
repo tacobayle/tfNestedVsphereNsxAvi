@@ -243,9 +243,6 @@ test_if_file_exists $(jq -c -r .esxi.iso_source_location $jsonFile) "   +++ Chec
 echo ""
 echo "==> Checking vCenter Settings..."
 test_if_file_exists $(jq -c -r .vcenter.iso_source_location $jsonFile) "   +++ Checking vCenter ISO..." "   ++++++ " "   ++++++ERROR++++++ "
-if [[ $(jq -c -r .vcenter.enable_vsan_esa $jsonFile) == true ]] ; then
-
-fi
 #
 #
 echo ""

@@ -54,7 +54,6 @@ test_if_ref_from_list_exists_in_another_list () {
   if [[ $check_status -eq 0 ]] ; then echo "$6$ref" ; exit 255 ; fi
 }
 #
-#
 tf_init_apply () {
   # $1 messsage to display
   # $2 is the folder to init/apply tf
@@ -92,7 +91,71 @@ tf_init_apply () {
   cd - > /dev/null
 }
 #
+vcenter_api () {
+  # $1 is the amount of retry
+  # $2 is the time to pause between each retry
+  # $3 type of HTTP method (GET, POST, PUT, PATCH)
+  # $4 vCenter token
+  # $5 http data
+  # $6 vCenter FQDN
+  # $7 API endpoint
+  retry=$1
+  pause=$2
+  attempt=0
+  echo "HTTP $3 API call to https://$6/$7"
+  while true ; do
+    response=$(curl -k -s -X $3 --write-out "\n%{http_code}" -H "vmware-api-session-id: $4" -H "Content-Type: application/json" -d "$5" https://$6/$7)
+    response_body=$(sed '$ d' <<< "$response")
+    response_code=$(tail -n1 <<< "$response")
+    if [[ $response_code == 2[0-9][0-9] ]] ; then
+      echo "  HTTP $3 API call to https://$6/$7 was successful"
+      break
+    else
+      echo "  Retrying HTTP $3 API call to https://$6/$7, http response code: $response_code, attempt: $attempt"
+    fi
+    if [ $attempt -eq $retry ]; then
+      echo "  FAILED HTTP $3 API call to https://$6/$7, response code was: $response_code"
+      echo "$response_body"
+      exit 255
+    fi
+    sleep $pause
+    ((attempt++))
+  done
+}
+#
+#
 # Sanity checks
+#
+echo ""
+echo "==> Checking vSphere folders for name conflict..."
+api_host="$(jq -r .vcenter_underlay.server $jsonFile)"
+vcenter_username=$TF_VAR_vsphere_username
+vcenter_domain=''
+vcenter_password=$TF_VAR_vsphere_password
+token=$(/bin/bash bash/create_vcenter_api_session.sh "$vcenter_username" "$vcenter_domain" "$vcenter_password" "$api_host")
+vcenter_api 6 10 "GET" $token "" $api_host "rest/vcenter/folder"
+response_folder=$(echo $response_body)
+IFS=$'\n'
+for folder_entry in $(echo $response_folder | jq -c -r .value[])
+do
+  if [[ $(echo $folder_entry | jq -c -r .type) == "VIRTUAL_MACHINE" ]] ; then
+    if [[ $(echo $folder_entry | jq -c -r .name) == $(jq -c -r .vcenter_underlay.folder $jsonFile) ]] ; then
+      echo "  +++ ERROR +++ folder $(jq -c -r .vcenter_underlay.folder $jsonFile) already exists"
+      #exit 255
+    fi
+  fi
+done
+#
+echo "==> Checking vSphere VMs for name conflict..."
+vcenter_api 6 10 "GET" $token "" $api_host "rest/vcenter/vm"
+response_vm=$(echo $response_body)
+for vm_entry in $(echo $response_vm | jq -c -r .value[])
+do
+  if [[ $(echo $vm_entry | jq -c -r .name) == $(jq -c -r .external_gw.name $jsonFile) ]] ; then
+    echo "  +++ ERROR +++ VM called $(jq -c -r .external_gw.name $jsonFile) already exists"
+    exit 255
+  fi
+done
 #
 echo ""
 echo "==> Checking Ubuntu Settings for external gw..."

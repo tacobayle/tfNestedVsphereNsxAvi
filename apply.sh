@@ -102,7 +102,7 @@ vcenter_api () {
   retry=$1
   pause=$2
   attempt=0
-  echo "HTTP $3 API call to https://$6/$7"
+  # echo "HTTP $3 API call to https://$6/$7"
   while true ; do
     response=$(curl -k -s -X $3 --write-out "\n%{http_code}" -H "vmware-api-session-id: $4" -H "Content-Type: application/json" -d "$5" https://$6/$7)
     response_body=$(sed '$ d' <<< "$response")
@@ -146,6 +146,7 @@ do
   fi
 done
 #
+echo ""
 echo "==> Checking vSphere VMs for name conflict..."
 vcenter_api 6 10 "GET" $token "" $api_host "rest/vcenter/vm"
 response_vm=$(echo $response_body)
@@ -237,6 +238,14 @@ echo $external_gw_json | jq . | tee external_gw.json > /dev/null
 echo ""
 echo "==> Checking ESXi Settings..."
 test_if_file_exists $(jq -c -r .esxi.iso_source_location $jsonFile) "   +++ Checking ESXi ISO..." "   ++++++ " "   ++++++ERROR++++++ "
+#
+#
+echo ""
+echo "==> Checking vCenter Settings..."
+test_if_file_exists $(jq -c -r .vcenter.iso_source_location $jsonFile) "   +++ Checking vCenter ISO..." "   ++++++ " "   ++++++ERROR++++++ "
+if [[ $(jq -c -r .vcenter.enable_vsan_esa $jsonFile) == true ]] ; then
+
+fi
 #
 #
 echo ""
@@ -480,7 +489,7 @@ fi
 # Build of the config of Avi
 #
 if [[ $(jq -c -r .avi.controller.create $jsonFile) == true ]] && [[ $(jq -c -r .avi.config.create $jsonFile) == true ]] ; then
-  tf_init_apply "Build of the config of Avi - This should take less than 20 minutes" avi/config ../../logs/tf_avi_config.stdout ../../logs/tf_avi_config.errors ../../$jsonFile
+  tf_init_apply "Build of the config of Avi - This should take less than 20 minutes" avi/config ../../logs/tf_avi_config.stdout ../../logs/tf_avi_config.errors ../../avi.json
 fi
 #
 # Output message
